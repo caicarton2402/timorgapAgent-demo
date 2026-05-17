@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TimorGAPAgent | Multi-Agent Collaboration Hub</title>
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- ECharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            --primary-teal: #1b7e6b;
+            --primary-navy: #0b3b5f;
+            --bg-gray: #f4f7fa;
+            --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --accent-gold: #c29d0b;
+            --safe-green: #22c55e;
+            --warn-orange: #f97316;
+            --danger-red: #ef4444;
+            --chat-bg: #f3f4f6;
+            --user-bubble: #1b7e6b;
+            --agent-bubble: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg-gray);
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: #1e2a3e;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* SPA Page Management */
+        .page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-gray);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+            overflow-y: auto;
+            padding-bottom: 40px;
+        }
+        .page.hidden { transform: translateX(100%); }
+        .page.active { transform: translateX(0); }
+        
+        #dashboard {
+            position: relative;
+            transform: none;
+            z-index: 1;
+            padding-bottom: 100px;
+        }
+
+        /* Components: Header */
+        .h5-header {
+            background: linear-gradient(135deg, var(--primary-navy), var(--primary-teal));
+            padding: 24px 20px 48px;
+            color: white;
+            border-radius: 0 0 32px 32px;
+        }
+        .h5-header h1 {
+            font-size: 24px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .h5-header p {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        /* Stats Badge */
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            margin: -28px 16px 20px;
+            padding: 20px 16px;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
+        }
+        .stat-box { text-align: center; }
+        .stat-val { font-size: 22px; font-weight: 800; color: var(--primary-navy); display: block; }
+        .stat-name { font-size: 10px; color: #7f99b5; text-transform: uppercase; font-weight: 600; }
+
+        /* Content Area */
+        .content { padding: 0 16px; }
+
+        /* Card System */
+        .card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(0,0,0,0.02);
+            box-shadow: var(--card-shadow);
+            transition: transform 0.1s;
+        }
+        .card:active { transform: scale(0.98); }
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .tag-agent {
+            background: #eef2ff;
+            color: #4a6ee0;
+            font-size: 9px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* Well Items */
+        .well-item {
+            background: #f8fbff;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: 1px solid #edf2f7;
+            cursor: pointer;
+        }
+        .well-top { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .well-name { font-weight: 700; font-size: 15px; color: var(--primary-navy); }
+        .status-pill {
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            background: #e6f7ec;
+            color: #2b6e3c;
+            font-weight: 600;
+        }
+        .status-pill.warning { background: #fff1e0; color: #c26b1a; }
+        .well-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            font-size: 11px;
+            color: #64748b;
+        }
+        .well-metrics strong { color: #1e2a3e; font-size: 13px; display: block; }
+
+        /* Agent Tasks */
+        .agent-item {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 20px;
+            position: relative;
+            cursor: pointer;
+        }
+        .agent-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-teal);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            z-index: 2;
+        }
+        .agent-info h4 { font-size: 14px; font-weight: 700; }
+        .agent-info p { font-size: 12px; color: #64748b; line-height: 1.4; }
+
+        /* Charts */
+        #sequenceChart { height: 250px; width: 100%; }
+
+        /* Sub-page Design */
+        .sub-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            font-size: 18px;
+            color: var(--primary-navy);
+        }
+        .sub-title { font-size: 18px; font-weight: 800; color: var(--primary-navy); }
+        
+        .delivery-content { padding: 20px; }
+        .delivery-header {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .log-item {
+            padding-left: 16px;
+            border-left: 2px solid #e2e8f0;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .log-item::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 0;
+            width: 8px;
+            height: 8px;
+            background: var(--primary-teal);
+            border-radius: 50%;
+        }
+        .log-time { font-size: 10px; color: #94a3b8; font-weight: 700; }
+        .log-msg { font-size: 13px; font-weight: 500; margin-top: 4px; }
+
+        /* Bottom Fixed Bar */
+        .bottom-actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px 16px 32px;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 -8px 20px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+        .btn {
+            flex: 1;
+            border: none;
+            height: 52px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .btn-primary { background: var(--primary-teal); color: white; box-shadow: 0 4px 15px rgba(27, 126, 107, 0.3); }
+        .btn-outline { background: #f1f5f9; color: var(--primary-navy); }
+
+        /* Chat Component Styles */
+        #chat-fab {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: var(--primary-navy);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            z-index: 90;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 60px);
+            background: var(--chat-bg);
+        }
+        #message-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.4;
+            position: relative;
+        }
+        .message.user {
+            align-self: flex-end;
+            background: var(--user-bubble);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .message.agent {
+            align-self: flex-start;
+            background: var(--agent-bubble);
+            color: #1e2a3e;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .typing-indicator {
+            font-style: italic;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        #chat-input-bar {
+            padding: 12px 16px;
+            background: white;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        #chat-input {
+            flex: 1;
+            border: 1px solid #e5e7eb;
+            padding: 10px 16px;
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+        }
+        #send-btn {
+            background: var(--primary-teal);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Utilities */
+        .pulse { animation: pulse-animation 2s infinite; }
+        @keyframes pulse-animation {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="page active">
+        <header class="h5-header">
+            <h1><i class="fas fa-brain"></i> TimorGAPAgent</h1>
+            <p>Intelligence Hub for Oil & Gas Assets</p>
+        </header>
+
+        <div class="stats-container">
+            <div class="stat-box">
+                <span class="stat-val" id="activeAgentsCount">6</span>
+                <span class="stat-name">Active Agents</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-val" id="wellCount">4</span>
+                <span class="stat-name">Managed Wells</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-val" id="alertsCount">0</span>
+                <span class="stat-name">Risk Alerts</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Wells Section -->
+            <section class="card">
+                <div class="card-title">
+                    <span><i class="fas fa-oil-well" style="color: var(--primary-teal);"></i> Wellbore Health</span>
+                    <span class="tag-agent">Sensor Data</span>
+                </div>
+                <div id="wellList">
+                    <!-- Dynamic Wells -->
+                </div>
+            </section>
+
+            <!-- Chart Section -->
+            <section class="card">
+                <div class="card-title">
+                    <span><i class="fas fa-project-diagram" style="color: #6366f1;"></i> Reasoning Chain</span>
+                    <span class="tag-agent">Real-time Collab</span>
+                </div>
+                <div id="sequenceChart"></div>
+            </section>
+
+            <!-- Agents Section -->
+            <section class="card">
+                <div class="card-title">
+                    <span><i class="fas fa-robot" style="color: #f59e0b;"></i> Agent Workforce</span>
+                    <span class="tag-agent">Brain Layers</span>
+                </div>
+                <div class="agent-flow" id="agentTaskList">
+                    <!-- Dynamic Agents -->
+                </div>
+            </section>
+
+            <!-- Briefing Cards -->
+            <div style="display: flex; gap: 14px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 20px;">
+                <div class="card" style="min-width: 280px; margin-bottom: 0; cursor: pointer;" onclick="showPage('carbon-page')">
+                    <div class="card-title" style="font-size: 14px;">
+                        <span><i class="fas fa-leaf" style="color: var(--safe-green);"></i> Carbon Audit</span>
+                    </div>
+                    <p style="font-size: 13px; font-weight: 600;">Net: 328 tCO₂e <span style="color: var(--safe-green);">▼ 2.1%</span></p>
+                    <p style="font-size: 11px; color: #64748b; margin-top: 6px;">Collaborative Target: Carbon Neutral Phase 1</p>
+                </div>
+                <div class="card" style="min-width: 280px; margin-bottom: 0; cursor: pointer;" onclick="showPage('security-page')">
+                    <div class="card-title" style="font-size: 14px;">
+                        <span><i class="fas fa-shield-halved" style="color: #3b82f6;"></i> Security Sentinel</span>
+                    </div>
+                    <p style="font-size: 13px; font-weight: 600;">System Integrity: <span style="color: var(--safe-green);">100%</span></p>
+                    <p style="font-size: 11px; color: #64748b; margin-top: 6px;">Network scan completed 2 mins ago.</p>
+                </div>
+            </div>
+        </div>
+
+        <button id="chat-fab" onclick="showPage('chat-page')">
+            <i class="fas fa-comment-dots"></i>
+        </button>
+
+        <div class="bottom-actions">
+            <button class="btn btn-outline" id="simulateEventBtn">
+                <i class="fas fa-bolt"></i> Anomaly Spike
+            </button>
+            <button class="btn btn-primary" id="applyOptBtn">
+                <i class="fas fa-wand-magic-sparkles"></i> Execute Collab
+            </button>
+        </div>
+    </div>
+
+    <!-- Secondary Page: AI Chat -->
+    <div id="chat-page" class="page hidden">
+        <div class="sub-header">
+            <button class="back-btn" onclick="hidePage()"><i class="fas fa-chevron-left"></i></button>
+            <span class="sub-title">Chat with TimorGAPAgent</span>
+        </div>
+        <div id="chat-container">
+            <div id="message-list">
+                <div class="message agent">Welcome to TimorGAPAgent Intelligence Hub. System status: All agents online.</div>
+                <div class="message user">Summarize the anomaly detected earlier in P1 cluster.</div>
+                <div class="message agent">At 09:34 AM, Perception Agent detected a 4.25 MPa pressure spike in P1 Producer. Diagnosis Agent identified a transient gas lock risk. Collaborative intervention was executed, and pressure stabilized at 2.95 MPa within 120 seconds.</div>
+                <div class="message user">What is the expected production gain after the optimization?</div>
+                <div class="message agent">The current RL-based strategy predicts a 5.2% increase in net oil recovery for the P1-W1 cluster over the next 24 hours.</div>
+                <div class="message agent">How can I assist you further today?</div>
+            </div>
+            <div id="chat-input-bar">
+                <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.keyCode==13) sendMessage()">
+                <button id="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Page: Well Details -->
+    <div id="well-page" class="page hidden">
+        <div class="sub-header">
+            <button class="back-btn" onclick="hidePage()"><i class="fas fa-chevron-left"></i></button>
+            <span class="sub-title">Wellbore Report</span>
+        </div>
+        <div class="delivery-content">
+            <div class="delivery-header">
+                <h2 id="subWellName" style="font-size: 20px; font-weight: 800;">P1 Producer</h2>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <span class="status-pill">Active</span>
+                    <span class="tag-agent" style="background: #f8fafc; color: #64748b;">ID: W-10024</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Live Diagnostics</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div><span style="font-size: 11px; color: #94a3b8;">Pressure</span><br><strong style="font-size: 18px;">2.95 MPa</strong></div>
+                    <div><span style="font-size: 11px; color: #94a3b8;">Temperature</span><br><strong style="font-size: 18px;">78.2 °C</strong></div>
+                    <div><span style="font-size: 11px; color: #94a3b8;">Pump Efficiency</span><br><strong style="font-size: 18px;">84.5%</strong></div>
+                    <div><span style="font-size: 11px; color: #94a3b8;">Vibration</span><br><strong style="font-size: 18px; color: var(--safe-green);">Normal</strong></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Intervention History</div>
+                <div class="log-item">
+                    <div class="log-time">09:45 AM</div>
+                    <div class="log-msg">Diagnosis Agent: Optimized pump speed to 45Hz.</div>
+                </div>
+                <div class="log-item">
+                    <div class="log-time">08:12 AM</div>
+                    <div class="log-msg">System: Routine data sync completed.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Page: Agent Intelligence -->
+    <div id="agent-page" class="page hidden">
+        <div class="sub-header">
+            <button class="back-btn" onclick="hidePage()"><i class="fas fa-chevron-left"></i></button>
+            <span class="sub-title">Agent Intelligence</span>
+        </div>
+        <div class="delivery-content">
+            <div class="delivery-header" style="background: var(--primary-navy); color: white;">
+                <div id="subAgentIcon" style="font-size: 32px; margin-bottom: 12px;"><i class="fas fa-brain"></i></div>
+                <h2 id="subAgentName" style="font-size: 20px; font-weight: 800;">Decision Agent</h2>
+                <p id="subAgentTask" style="font-size: 13px; opacity: 0.8; margin-top: 4px;">Optimizing injection-production balance.</p>
+            </div>
+            <div class="card">
+                <div class="card-title">Reasoning Log (LLM Output)</div>
+                <div style="background: #f8fafc; padding: 16px; border-radius: 16px; font-size: 13px; font-family: monospace; color: #334155;">
+                    > ANALYZING P1 PRESSURE DATA...<br>
+                    > DETECTED SUBTLE DECLINE IN PUMP EFFICIENCY.<br>
+                    > CORRELATING WITH INJECTOR W1 DATA...<br>
+                    > RECOMMENDATION: INCREASE INJECTION BY 2.4%.<br>
+                    > CONFIDENCE: 94.2%
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Resource Usage</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 14px;">Tokens Consumed (Today)</span>
+                    <strong style="color: var(--primary-teal);">12,450</strong>
+                </div>
+                <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; margin-top: 10px;">
+                    <div style="width: 45%; height: 100%; background: var(--primary-teal); border-radius: 3px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Page: Carbon / Security -->
+    <div id="carbon-page" class="page hidden">
+        <div class="sub-header">
+            <button class="back-btn" onclick="hidePage()"><i class="fas fa-chevron-left"></i></button>
+            <span class="sub-title">ESG Delivery Report</span>
+        </div>
+        <div class="delivery-content">
+            <div class="card" style="background: #f0fdf4;">
+                <h3 style="color: #166534; margin-bottom: 10px;">Carbon Neutrality Score: A+</h3>
+                <p style="font-size: 12px; color: #166534;">Your asset is currently performing better than 85% of regional benchmarks.</p>
+            </div>
+            <div class="card">
+                <div class="card-title">Emission Breakdown</div>
+                <div style="height: 200px; display: flex; align-items: flex-end; gap: 20px; padding: 20px 0;">
+                    <div style="flex:1; background: #e2e8f0; height: 80%; border-radius: 8px 8px 0 0; text-align: center;"><span style="font-size: 9px; position: absolute; bottom: -20px;">Direct</span></div>
+                    <div style="flex:1; background: #cbd5e1; height: 40%; border-radius: 8px 8px 0 0; text-align: center;"><span style="font-size: 9px; position: absolute; bottom: -20px;">Indirect</span></div>
+                    <div style="flex:1; background: var(--primary-teal); height: 20%; border-radius: 8px 8px 0 0; text-align: center;"><span style="font-size: 9px; position: absolute; bottom: -20px;">Offset</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="security-page" class="page hidden">
+        <div class="sub-header">
+            <button class="back-btn" onclick="hidePage()"><i class="fas fa-chevron-left"></i></button>
+            <span class="sub-title">Security Audit</span>
+        </div>
+        <div class="delivery-content">
+            <div class="card" style="border-left: 6px solid var(--safe-green);">
+                <div class="card-title">Network Integrity</div>
+                <p style="font-size: 14px; font-weight: 600; color: var(--safe-green);"><i class="fas fa-check-circle"></i> All Gateways Secure</p>
+            </div>
+            <div class="card">
+                <div class="card-title">Threat Intelligence Log</div>
+                <div class="log-item">
+                    <div class="log-time">Just Now</div>
+                    <div class="log-msg">Zero-Trust Auth: User 'TimorAdmin' authorized from Verified IP.</div>
+                </div>
+                <div class="log-item">
+                    <div class="log-time">1 hour ago</div>
+                    <div class="log-msg">Anomaly detection: Port 443 scan blocked (Origin: Unknown).</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- Data & State ----------
+        let wellsData = [
+            { id: "W1", name: "P1 Producer", oil: "32.4", pres: "2.86", temp: "78", status: "Normal", type: "normal" },
+            { id: "W2", name: "P2 Producer", oil: "28.1", pres: "3.12", temp: "81", status: "Normal", type: "normal" },
+            { id: "W3", name: "P3 Producer", oil: "24.7", pres: "1.95", temp: "76", status: "Steady", type: "normal" },
+            { id: "W4", name: "W1 Injector", oil: "112.5", pres: "18.4", temp: "55", status: "Online", type: "normal" }
+        ];
+
+        let agentsData = [
+            { name: "Perception Agent", task: "Analyzing high-res sensor streams", icon: "fa-eye", active: true },
+            { name: "Diagnosis Agent", task: "Detecting pump efficiency trends", icon: "fa-stethoscope", active: true },
+            { name: "Decision Agent", task: "Optimizing multi-well production", icon: "fa-brain", active: true },
+            { name: "Safety Agent", task: "Monitoring structural integrity", icon: "fa-shield-halved", active: false }
+        ];
+
+        let activePageId = 'dashboard';
+
+        // ---------- AI Chat Logic ----------
+        const chatResponses = [
+            "Analyzing wellbore telemetry data...",
+            "I've cross-referenced P1 and P2 production rates. Efficiency is stable.",
+            "Detection Agent reporting: No structural anomalies detected in the last 24 hours.",
+            "Would you like me to generate a collaborative optimization plan for the W1 injection cluster?",
+            "P3 pump efficiency is at 84.5%. No immediate intervention required.",
+            "The ESG audit is complete. Your current carbon footprint is trending 2% lower than last month."
+        ];
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            input.value = '';
+
+            // Simulate Agent Response
+            setTimeout(() => {
+                const typing = document.createElement('div');
+                typing.className = 'typing-indicator';
+                typing.id = 'typing';
+                typing.innerText = 'TimorGAPAgent is thinking...';
+                document.getElementById('message-list').appendChild(typing);
+                scrollChat();
+
+                setTimeout(() => {
+                    const typingEl = document.getElementById('typing');
+                    if (typingEl) typingEl.remove();
+                    const randomReply = chatResponses[Math.floor(Math.random() * chatResponses.length)];
+                    addMessage(randomReply, 'agent');
+                }, 1500);
+            }, 500);
+        }
+
+        function addMessage(text, side) {
+            const list = document.getElementById('message-list');
+            const msg = document.createElement('div');
+            msg.className = `message ${side}`;
+            msg.innerText = text;
+            list.appendChild(msg);
+            scrollChat();
+        }
+
+        function scrollChat() {
+            const list = document.getElementById('message-list');
+            list.scrollTop = list.scrollHeight;
+        }
+
+        // ---------- SPA Navigation ----------
+        function showPage(pageId, data = null) {
+            const page = document.getElementById(pageId);
+            if (!page) return;
+            
+            // Populate data if needed
+            if (pageId === 'well-page' && data) {
+                document.getElementById('subWellName').innerText = data.name;
+            } else if (pageId === 'agent-page' && data) {
+                document.getElementById('subAgentName').innerText = data.name;
+                document.getElementById('subAgentTask').innerText = data.task;
+                document.getElementById('subAgentIcon').innerHTML = `<i class="fas ${data.icon}"></i>`;
+            }
+
+            page.classList.remove('hidden');
+            page.classList.add('active');
+            activePageId = pageId;
+            window.scrollTo(0, 0);
+        }
+
+        function hidePage() {
+            const page = document.getElementById(activePageId);
+            if (page && activePageId !== 'dashboard') {
+                page.classList.add('hidden');
+                page.classList.remove('active');
+                activePageId = 'dashboard';
+            }
+        }
+
+        // ---------- Rendering ----------
+        function render() {
+            // Wells
+            const wellBox = document.getElementById('wellList');
+            wellBox.innerHTML = wellsData.map(w => `
+                <div class="well-item" onclick="showPage('well-page', {name: '${w.name}'})">
+                    <div class="well-top">
+                        <span class="well-name">${w.name}</span>
+                        <span class="status-pill ${w.type === 'warning' ? 'warning' : ''}">${w.status}</span>
+                    </div>
+                    <div class="well-metrics">
+                        <div>Rate <strong>${w.oil} m³/d</strong></div>
+                        <div>Pres <strong>${w.pres} MPa</strong></div>
+                        <div>Temp <strong>${w.temp} °C</strong></div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Agents
+            const agentBox = document.getElementById('agentTaskList');
+            agentBox.innerHTML = agentsData.map(a => `
+                <div class="agent-item" onclick="showPage('agent-page', {name: '${a.name}', task: '${a.task}', icon: '${a.icon}'})">
+                    <div class="agent-avatar ${a.active ? '' : 'idle'}">
+                        <i class="fas ${a.icon}"></i>
+                    </div>
+                    <div class="agent-info">
+                        <h4>${a.name}</h4>
+                        <p>${a.task}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('wellCount').innerText = wellsData.length;
+            document.getElementById('activeAgentsCount').innerText = agentsData.filter(a => a.active).length;
+            document.getElementById('alertsCount').innerText = wellsData.filter(w => w.type === 'warning').length;
+        }
+
+        // ---------- ECharts ----------
+        let chart;
+        function initChart() {
+            chart = echarts.init(document.getElementById('sequenceChart'));
+            const option = {
+                grid: { left: '4%', right: '10%', bottom: '5%', top: '10%', containLabel: true },
+                xAxis: { type: 'time', splitLine: { show: false }, axisLabel: { fontSize: 10 } },
+                yAxis: { 
+                    type: 'category', 
+                    data: ['Sensor', 'Brain', 'Decision', 'Execution'],
+                    axisLine: { show: false }, axisTick: { show: false }, axisLabel: { fontSize: 11, fontWeight: 700 }
+                },
+                series: [{
+                    type: 'scatter', symbolSize: 18, itemStyle: { color: '#1b7e6b' },
+                    label: { show: true, position: 'right', fontSize: 10, fontWeight: 700, formatter: '{b}' },
+                    data: [
+                        { value: [Date.now() - 300000, 'Sensor'], name: 'Telemetry' },
+                        { value: [Date.now() - 240000, 'Brain'], name: 'Diagnosis' },
+                        { value: [Date.now() - 120000, 'Decision'], name: 'Plan Gen' },
+                        { value: [Date.now(), 'Execution'], name: 'Closed-loop' }
+                    ]
+                }, {
+                    type: 'line', smooth: true, lineStyle: { width: 2, type: 'dashed', color: '#cbd5e1' },
+                    data: [
+                        [Date.now() - 300000, 'Sensor'],
+                        [Date.now() - 240000, 'Brain'],
+                        [Date.now() - 120000, 'Decision'],
+                        [Date.now(), 'Execution']
+                    ]
+                }]
+            };
+            chart.setOption(option);
+        }
+
+        // ---------- Anomaly Simulation ----------
+        function simulateAnomaly() {
+            // Well Spike
+            wellsData[0].pres = "4.25";
+            wellsData[0].status = "Spike Warning";
+            wellsData[0].type = "warning";
+
+            // Agents Activate
+            agentsData[1].task = "CRITICAL: Analyzing high-pressure spike root cause...";
+            agentsData[2].task = "Calculating production inhibition strategy";
+            agentsData[3].active = true;
+            agentsData[3].task = "Sentinel: Monitoring pipeline surge risks";
+
+            render();
+            
+            chart.setOption({
+                series: [{ 
+                    data: [
+                        { value: [Date.now() - 10000, 'Sensor'], name: 'CRITICAL', itemStyle: {color: '#ef4444'} },
+                        { value: [Date.now() - 5000, 'Brain'], name: 'Anomaly Detected' },
+                        { value: [Date.now(), 'Execution'], name: 'Auto Intervention' }
+                    ]
+                }]
+            });
+
+            document.querySelector('.h5-header').style.background = 'linear-gradient(135deg, #7f1d1d, #ef4444)';
+            document.getElementById('applyOptBtn').classList.add('pulse');
+        }
+
+        function applyOptimization() {
+            wellsData[0].pres = "2.95";
+            wellsData[0].status = "Steady";
+            wellsData[0].type = "normal";
+
+            agentsData.forEach(a => a.active = true);
+            agentsData[2].task = "Production optimized. Efficiency +4.8%";
+            
+            render();
+            document.querySelector('.h5-header').style.background = 'linear-gradient(135deg, var(--primary-navy), var(--primary-teal))';
+            document.getElementById('applyOptBtn').classList.remove('pulse');
+            initChart();
+
+            // Success Toast
+            const toast = document.createElement('div');
+            toast.style = "position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); color:white; padding:12px 24px; border-radius:32px; font-size:13px; z-index:1000; font-weight:700;";
+            toast.innerText = "✓ Multi-Agent Collaboration Executed Successfully";
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        // ---------- Init ----------
+        document.addEventListener('DOMContentLoaded', () => {
+            render();
+            initChart();
+            document.getElementById('simulateEventBtn').onclick = simulateAnomaly;
+            document.getElementById('applyOptBtn').onclick = applyOptimization;
+            window.addEventListener('resize', () => chart && chart.resize());
+        });
+    </script>
+</body>
+</html>
