@@ -404,6 +404,20 @@
             </section>
 
             <!-- Chart Section -->
+            <section class="card" onclick="showPage('performance-page')" style="cursor: pointer;">
+                <div class="card-title">
+                    <span><i class="fas fa-chart-line" style="color: #ef4444;"></i> Asset Performance</span>
+                    <span class="tag-agent">Production Analytics</span>
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 8px;">
+                    <span style="font-size: 24px; font-weight: 800;">1,245.8</span>
+                    <span style="font-size: 12px; color: #64748b;">m³/d Total Rate</span>
+                </div>
+                <p style="font-size: 11px; color: var(--safe-green); font-weight: 700; margin-top: 8px;"><i class="fas fa-caret-up"></i> 4.2% Optimization Gain</p>
+                <p style="font-size: 10px; color: var(--primary-teal); margin-top: 12px; font-weight: 700;">View Level 2: Performance Analytics</p>
+            </section>
+
+            <!-- Chart Section -->
             <section class="card">
                 <div class="card-title">
                     <span><i class="fas fa-project-diagram" style="color: #6366f1;"></i> Reasoning Chain</span>
@@ -492,14 +506,15 @@
                     <span class="tag-agent" style="background: #f8fafc; color: #64748b;">ID: W-10024</span>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-title">Live Diagnostics</div>
+            <div class="card" onclick="showPage('sensor-history-page', {name: document.getElementById('subWellName').innerText})" style="cursor: pointer;">
+                <div class="card-title">Live Diagnostics <i class="fas fa-chevron-right" style="font-size: 12px; color: #cbd5e1;"></i></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div><span style="font-size: 11px; color: #94a3b8;">Pressure</span><br><strong style="font-size: 18px;">2.95 MPa</strong></div>
                     <div><span style="font-size: 11px; color: #94a3b8;">Temperature</span><br><strong style="font-size: 18px;">78.2 °C</strong></div>
                     <div><span style="font-size: 11px; color: #94a3b8;">Pump Efficiency</span><br><strong style="font-size: 18px;">84.5%</strong></div>
                     <div><span style="font-size: 11px; color: #94a3b8;">Vibration</span><br><strong style="font-size: 18px; color: var(--safe-green);">Normal</strong></div>
                 </div>
+                <p style="font-size: 10px; color: var(--primary-teal); margin-top: 12px; font-weight: 700;">View Level 3: Historical Sensor Data</p>
             </div>
             <div class="card">
                 <div class="card-title">Intervention History</div>
@@ -527,8 +542,8 @@
                 <h2 id="subAgentName" style="font-size: 20px; font-weight: 800;">Decision Agent</h2>
                 <p id="subAgentTask" style="font-size: 13px; opacity: 0.8; margin-top: 4px;">Optimizing injection-production balance.</p>
             </div>
-            <div class="card">
-                <div class="card-title">Reasoning Log (LLM Output)</div>
+            <div class="card" onclick="showPage('trace-page', {name: document.getElementById('subAgentName').innerText})" style="cursor: pointer;">
+                <div class="card-title">Reasoning Log (LLM Output) <i class="fas fa-chevron-right" style="font-size: 12px; color: #cbd5e1;"></i></div>
                 <div style="background: #f8fafc; padding: 16px; border-radius: 16px; font-size: 13px; font-family: monospace; color: #334155;">
                     > ANALYZING P1 PRESSURE DATA...<br>
                     > DETECTED SUBTLE DECLINE IN PUMP EFFICIENCY.<br>
@@ -536,6 +551,7 @@
                     > RECOMMENDATION: INCREASE INJECTION BY 2.4%.<br>
                     > CONFIDENCE: 94.2%
                 </div>
+                <p style="font-size: 10px; color: var(--primary-teal); margin-top: 12px; font-weight: 700;">View Level 3: Deep Reasoning Trace</p>
             </div>
             <div class="card">
                 <div class="card-title">Resource Usage</div>
@@ -561,13 +577,14 @@
                 <h3 style="color: #166534; margin-bottom: 10px;">Carbon Neutrality Score: A+</h3>
                 <p style="font-size: 12px; color: #166534;">Your asset is currently performing better than 85% of regional benchmarks.</p>
             </div>
-            <div class="card">
-                <div class="card-title">Emission Breakdown</div>
+            <div class="card" onclick="showPage('offset-page')" style="cursor: pointer;">
+                <div class="card-title">Emission Breakdown <i class="fas fa-chevron-right" style="font-size: 12px; color: #cbd5e1;"></i></div>
                 <div style="height: 200px; display: flex; align-items: flex-end; gap: 20px; padding: 20px 0;">
                     <div style="flex:1; background: #e2e8f0; height: 80%; border-radius: 8px 8px 0 0; text-align: center;"><span style="font-size: 9px; position: absolute; bottom: -20px;">Direct</span></div>
                     <div style="flex:1; background: #cbd5e1; height: 40%; border-radius: 8px 8px 0 0; text-align: center;"><span style="font-size: 9px; position: absolute; bottom: -20px;">Indirect</span></div>
                     <div style="flex:1; background: var(--primary-teal); height: 20%; border-radius: 8px 8px 0 0; text-align: center;"><span style="font-size: 9px; position: absolute; bottom: -20px;">Offset</span></div>
                 </div>
+                <p style="font-size: 10px; color: var(--primary-teal); margin-top: 12px; font-weight: 700;">View Level 3: Carbon Offset Marketplace</p>
             </div>
         </div>
     </div>
@@ -596,6 +613,106 @@
         </div>
     </div>
 
+    <!-- NEW LEVEL 2: Performance Analytics -->
+    <div id="performance-page" class="page hidden">
+        <div class="sub-header">
+            <button class="back-btn" onclick="hidePage()"><i class="fas fa-chevron-left"></i></button>
+            <span class="sub-title">Performance Analytics</span>
+        </div>
+        <div class="delivery-content">
+            <div class="card">
+                <div class="card-title">Asset Throughput</div>
+                <div id="performanceChart" style="height: 200px;"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Optimization Metrics</div>
+                <div class="log-item">
+                    <div class="log-time">Efficiency Gain</div>
+                    <div class="log-msg">+4.2% (Compared to Manual Baseline)</div>
+                </div>
+                <div class="log-item">
+                    <div class="log-time">Downtime Reduction</div>
+                    <div class="log-msg">14.5 Hours Saved (Last 30 Days)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW LEVEL 3: Sensor History -->
+    <div id="sensor-history-page" class="page hidden">
+        <div class="sub-header">
+            <button class="back-btn" onclick="hidePage()"><i class="fas fa-chevron-left"></i></button>
+            <span class="sub-title">Historical Sensor Data</span>
+        </div>
+        <div class="delivery-content">
+            <div class="delivery-header">
+                <h2 id="sensorWellName" style="font-size: 20px; font-weight: 800;">P1 Producer</h2>
+                <p style="font-size: 12px; color: #64748b;">30-Day Pressure Trend (MPa)</p>
+            </div>
+            <div class="card">
+                <div id="historyChart" style="height: 250px;"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Raw Logs</div>
+                <div style="font-size: 11px; font-family: monospace; line-height: 2;">
+                    2026-05-17 09:30: 2.86 MPa<br>
+                    2026-05-17 09:00: 2.85 MPa<br>
+                    2026-05-17 08:30: 2.88 MPa<br>
+                    2026-05-17 08:00: 2.84 MPa
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW LEVEL 3: Reasoning Trace -->
+    <div id="trace-page" class="page hidden">
+        <div class="sub-header">
+            <button class="back-btn" onclick="hidePage()"><i class="fas fa-chevron-left"></i></button>
+            <span class="sub-title">Agent Logic Trace</span>
+        </div>
+        <div class="delivery-content">
+            <div class="delivery-header">
+                <h2 id="traceAgentName" style="font-size: 20px; font-weight: 800;">Decision Agent</h2>
+                <p style="font-size: 12px; color: #64748b;">Full reasoning chain for Task #2934</p>
+            </div>
+            <div class="card">
+                <div class="log-item">
+                    <div class="log-time">Phase 1: Input Analysis</div>
+                    <div class="log-msg">Retrieved pressure (2.86) and temperature (78) from Perception Agent.</div>
+                </div>
+                <div class="log-item">
+                    <div class="log-time">Phase 2: Pattern Match</div>
+                    <div class="log-msg">Cross-referenced with Reservoir Model #04. Confidence: 98%.</div>
+                </div>
+                <div class="log-item">
+                    <div class="log-time">Phase 3: Decision Gen</div>
+                    <div class="log-msg">Selected Strategy: 'Dynamic Injection Balancing'.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW LEVEL 3: Carbon Offset -->
+    <div id="offset-page" class="page hidden">
+        <div class="sub-header">
+            <button class="back-btn" onclick="hidePage()"><i class="fas fa-chevron-left"></i></button>
+            <span class="sub-title">Carbon Offset Marketplace</span>
+        </div>
+        <div class="delivery-content">
+            <div class="card">
+                <div class="card-title">Available Projects</div>
+                <div class="well-item">
+                    <div class="well-top"><span class="well-name">Timor Reforestation</span> <span class="status-pill">Active</span></div>
+                    <p style="font-size: 11px; color: #64748b;">$12.50 / tCO₂e - Verra Certified</p>
+                </div>
+                <div class="well-item">
+                    <div class="well-top"><span class="well-name">Coastal Mangroves</span> <span class="status-pill">Premium</span></div>
+                    <p style="font-size: 11px; color: #64748b;">$18.00 / tCO₂e - Gold Standard</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ---------- Data & State ----------
         let wellsData = [
@@ -613,6 +730,7 @@
         ];
 
         let activePageId = 'dashboard';
+        let navStack = ['dashboard'];
 
         // ---------- AI Chat Logic ----------
         const chatResponses = [
@@ -676,20 +794,29 @@
                 document.getElementById('subAgentName').innerText = data.name;
                 document.getElementById('subAgentTask').innerText = data.task;
                 document.getElementById('subAgentIcon').innerHTML = `<i class="fas ${data.icon}"></i>`;
+            } else if (pageId === 'sensor-history-page' && data) {
+                document.getElementById('sensorWellName').innerText = data.name;
+                setTimeout(initHistoryChart, 100);
+            } else if (pageId === 'trace-page' && data) {
+                document.getElementById('traceAgentName').innerText = data.name;
+            } else if (pageId === 'performance-page') {
+                setTimeout(initPerformanceChart, 100);
             }
 
             page.classList.remove('hidden');
             page.classList.add('active');
+            navStack.push(pageId);
             activePageId = pageId;
             window.scrollTo(0, 0);
         }
 
         function hidePage() {
-            const page = document.getElementById(activePageId);
-            if (page && activePageId !== 'dashboard') {
-                page.classList.add('hidden');
-                page.classList.remove('active');
-                activePageId = 'dashboard';
+            if (navStack.length > 1) {
+                const currentPageId = navStack.pop();
+                const currentPage = document.getElementById(currentPageId);
+                currentPage.classList.add('hidden');
+                currentPage.classList.remove('active');
+                activePageId = navStack[navStack.length - 1];
             }
         }
 
@@ -762,6 +889,35 @@
                 }]
             };
             chart.setOption(option);
+        }
+
+        function initPerformanceChart() {
+            const pChart = echarts.init(document.getElementById('performanceChart'));
+            pChart.setOption({
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+                yAxis: { type: 'value' },
+                series: [{
+                    data: [1200, 1220, 1215, 1240, 1235, 1250, 1245],
+                    type: 'line',
+                    smooth: true,
+                    areaStyle: { color: 'rgba(27, 126, 107, 0.2)' },
+                    itemStyle: { color: 'var(--primary-teal)' }
+                }]
+            });
+        }
+
+        function initHistoryChart() {
+            const hChart = echarts.init(document.getElementById('historyChart'));
+            hChart.setOption({
+                xAxis: { type: 'category', data: ['08:00', '08:30', '09:00', '09:30', '10:00'] },
+                yAxis: { type: 'value', min: 2.8 },
+                series: [{
+                    data: [2.84, 2.88, 2.85, 2.86, 2.87],
+                    type: 'bar',
+                    itemStyle: { color: 'var(--primary-navy)' }
+                }]
+            });
         }
 
         // ---------- Anomaly Simulation ----------
